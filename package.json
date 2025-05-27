@@ -1,0 +1,30 @@
+{
+  "name": "movie-review-project",
+  "version": "1.0.0",
+  "description": "A full-stack movie review application with TMDB API integration",
+  "main": "index.js",
+  "scripts": {
+    "start": "npm run start:backend",
+    "start:frontend": "cd movie-review-app && npm start",
+    "start:backend": "cd movie-review-backend && npm start",
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "dev:frontend": "cd movie-review-app && npm start",
+    "dev:backend": "cd movie-review-backend && npm run dev",
+    "install:all": "npm install && cd movie-review-app && npm install && cd ../movie-review-backend && npm install",
+    "build": "cd movie-review-app && npm run build",
+    "test": "cd movie-review-app && npm test"
+  },
+  "keywords": [
+    "react",
+    "node",
+    "express",
+    "mongodb",
+    "tmdb",
+    "movie-review"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+} 

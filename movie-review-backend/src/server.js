@@ -1,0 +1,53 @@
+const path = require('path');
+
+// Load environment variables from root directory
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
+
+const express = require('express');
+const cors = require('cors');
+const connectDB = require('../config/db');
+const userRoutes = require('../routes/userRoutes');
+const movieRoutes = require('../routes/movieRoutes');
+const favoriteRoutes = require('../routes/favoriteRoutes');
+const commentRoutes = require('../routes/commentRoutes');
+
+// Connect to database
+connectDB();
+
+const app = express();
+
+// CORS configuration
+const corsOptions = {
+    origin: process.env.NODE_ENV === 'production' 
+        ? [process.env.FRONTEND_URL]
+        : 'http://localhost:3000',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+// Middleware
+app.use(cors(corsOptions));
+app.use(express.json());
+
+// Routes
+app.use('/api/users', userRoutes);
+app.use('/api/movies', movieRoutes);
+app.use('/api/favorites', favoriteRoutes);
+app.use('/api/comments', commentRoutes);
+
+app.get('/', (req, res) => {
+    res.send('Movie Review API is running...');
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ message: 'Something went wrong!' });
+});
+
+const PORT = process.env.PORT || 8080;
+
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+}); 
