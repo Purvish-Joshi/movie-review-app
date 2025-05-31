@@ -20,12 +20,13 @@ const app = express();
 const corsOptions = {
     origin: [
         'http://localhost:3000',
-        process.env.FRONTEND_URL,
-        'https://your-vercel-app.vercel.app'  // Replace with your Vercel URL
+        'https://movie-review-app-blush.vercel.app',  // Your Vercel frontend URL
+        process.env.FRONTEND_URL
     ].filter(Boolean),
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    exposedHeaders: ['Content-Type', 'Authorization']
 };
 
 // Middleware

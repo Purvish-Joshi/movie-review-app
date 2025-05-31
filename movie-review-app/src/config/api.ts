@@ -7,6 +7,7 @@ const api = axios.create({
     baseURL: API_URL,
     headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json'
     },
     withCredentials: true
 });
@@ -24,6 +25,8 @@ api.interceptors.request.use(
         if (token && !config.headers.Authorization) {
             config.headers.Authorization = `Bearer ${token}`;
         }
+        // Ensure CORS headers are handled properly
+        config.headers['Access-Control-Allow-Origin'] = '*';
         return config;
     },
     (error) => {
