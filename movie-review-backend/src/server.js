@@ -20,17 +20,26 @@ const app = express();
 const corsOptions = {
     origin: [
         'http://localhost:3000',
-        'https://movie-review-app-blush.vercel.app',  // Your Vercel frontend URL
-        process.env.FRONTEND_URL
-    ].filter(Boolean),
+        'https://movie-review-app-blush.vercel.app'
+    ],
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    exposedHeaders: ['Content-Type', 'Authorization']
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: [
+        'Content-Type',
+        'Authorization',
+        'X-Requested-With',
+        'Accept',
+        'Origin'
+    ],
+    exposedHeaders: ['Content-Type', 'Authorization'],
+    preflightContinue: false,
+    optionsSuccessStatus: 204
 };
 
-// Middleware
+// Apply CORS middleware before other middleware
 app.use(cors(corsOptions));
+
+// Other middleware
 app.use(express.json());
 
 // Routes
