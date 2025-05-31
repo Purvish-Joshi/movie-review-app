@@ -18,9 +18,11 @@ const app = express();
 
 // CORS configuration
 const corsOptions = {
-    origin: process.env.NODE_ENV === 'production' 
-        ? [process.env.FRONTEND_URL]
-        : 'http://localhost:3000',
+    origin: [
+        'http://localhost:3000',
+        process.env.FRONTEND_URL,
+        'https://your-vercel-app.vercel.app'  // Replace with your Vercel URL
+    ].filter(Boolean),
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
@@ -48,6 +50,10 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 8080;
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+app.listen(PORT, async () => {
+    console.log('\n=================================');
+    console.log(`🚀 Server is running on port ${PORT}`);
+    console.log(`📡 MongoDB Cloud Status: Connected`);
+    console.log(`🌐 API URL: http://localhost:${PORT}`);
+    console.log('=================================\n');
 }); 
