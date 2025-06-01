@@ -13,7 +13,7 @@ const api = axios.create({
 });
 
 // Initialize authorization header from localStorage
-const token = localStorage.getItem('token');
+const token = localStorage.getItem('auth_token');
 if (token) {
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 }
@@ -21,7 +21,7 @@ if (token) {
 // Add a request interceptor to include the auth token
 api.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('auth_token');
         if (token && !config.headers.Authorization) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -38,7 +38,7 @@ api.interceptors.response.use(
     (error) => {
         if (error.response?.status === 401) {
             // Clear invalid session data
-            localStorage.removeItem('token');
+            localStorage.removeItem('auth_token');
             localStorage.removeItem('user');
             // Redirect to login if needed
             if (window.location.pathname !== '/login') {

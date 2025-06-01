@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { IconButton, Tooltip, Snackbar, Alert } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import api from '../config/api';
 
 interface FavoriteButtonProps {
@@ -14,21 +14,23 @@ const FavoriteButton: React.FC<FavoriteButtonProps> = ({ movieId, onChange }) =>
     const [isFavorite, setIsFavorite] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string>('');
-    const { user } = useAuth();
+    const { user, isAuthenticated } = useAuth();
 
     const checkFavoriteStatus = useCallback(async () => {
-        if (!user) return;
+        if (!isAuthenticated || !user) return;
+        
         try {
             const response = await api.get(`/favorites/check/${movieId}`);
             setIsFavorite(response.data.isFavorite);
         } catch (error: any) {
+            console.error('Error checking favorite status:', error);
             if (error.response?.status === 401) {
                 setError('Please log in again to manage favorites');
             } else {
                 setError(error.response?.data?.message || 'Failed to check favorite status');
             }
         }
-    }, [movieId, user]);
+    }, [movieId, user, isAuthenticated]);
 
     useEffect(() => {
         checkFavoriteStatus();
@@ -36,7 +38,7 @@ const FavoriteButton: React.FC<FavoriteButtonProps> = ({ movieId, onChange }) =>
 
     const handleToggleFavorite = async (e: React.MouseEvent) => {
         e.stopPropagation();
-        if (!user) {
+        if (!isAuthenticated || !user) {
             setError('Please log in to add favorites');
             return;
         }
@@ -53,6 +55,7 @@ const FavoriteButton: React.FC<FavoriteButtonProps> = ({ movieId, onChange }) =>
             
             onChange?.();
         } catch (error: any) {
+            console.error('Error toggling favorite:', error);
             if (error.response?.status === 401) {
                 setError('Please log in again to manage favorites');
             } else {
@@ -67,7 +70,8 @@ const FavoriteButton: React.FC<FavoriteButtonProps> = ({ movieId, onChange }) =>
         setError('');
     };
 
-    if (!user) return null;
+    // Don't render anything if not authenticated
+    if (!isAuthenticated || !user) return null;
 
     return (
         <>
