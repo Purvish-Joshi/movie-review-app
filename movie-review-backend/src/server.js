@@ -31,15 +31,22 @@ const corsOptions = {
         'Authorization',
         'X-Requested-With',
         'Accept',
-        'Origin'
+        'Origin',
+        'Cross-Origin-Opener-Policy'
     ],
-    exposedHeaders: ['Content-Type', 'Authorization'],
+    exposedHeaders: ['Content-Type', 'Authorization', 'Cross-Origin-Opener-Policy'],
     preflightContinue: false,
     optionsSuccessStatus: 204
 };
 
 // Apply CORS middleware before other middleware
 app.use(cors(corsOptions));
+
+// Add Cross-Origin-Opener-Policy header
+app.use((req, res, next) => {
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+    next();
+});
 
 // Other middleware
 app.use(express.json());

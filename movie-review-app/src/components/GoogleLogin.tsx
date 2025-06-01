@@ -12,6 +12,10 @@ const GoogleLogin: React.FC = () => {
 
   const handleSuccess = async (credentialResponse: any) => {
     try {
+      if (!credentialResponse.credential) {
+        throw new Error('No credential received from Google');
+      }
+
       const response = await api.post('/auth/google', {
         token: credentialResponse.credential,
       });
@@ -26,18 +30,26 @@ const GoogleLogin: React.FC = () => {
       
       // If the error is 404 (user not found), redirect to registration
       if (error.response?.status === 404) {
-        // Get the decoded token data from the backend response
-        const googleData = error.response.data.googleData;
-        
-        // Redirect to register page with the Google account data
-        navigate('/register', {
-          state: {
-            email: googleData.email,
-            googleData: googleData
-          }
-        });
+        try {
+          // Get the decoded token data from the backend response
+          const googleData = error.response.data.googleData;
+          
+          // Redirect to register page with the Google account data
+          navigate('/register', {
+            state: {
+              email: googleData.email,
+              googleData: googleData
+            }
+          });
+        } catch (navError) {
+          setError('Error processing Google login data. Please try again.');
+        }
       } else {
-        setError(error.response?.data?.message || 'Google login failed. Please try again.');
+        setError(
+          error.response?.data?.message || 
+          error.message || 
+          'Google login failed. Please try again.'
+        );
       }
     }
   };
@@ -56,7 +68,7 @@ const GoogleLogin: React.FC = () => {
         <GoogleOAuthLogin
           onSuccess={handleSuccess}
           onError={handleError}
-          useOneTap
+          useOneTap={false}
           theme="filled_blue"
           size="large"
           shape="rectangular"
