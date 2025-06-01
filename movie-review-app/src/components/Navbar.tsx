@@ -9,6 +9,13 @@ interface NavbarProps {
   children?: ReactNode;
 }
 
+interface User {
+  id: string;
+  username?: string;
+  email: string;
+  picture?: string;
+}
+
 const Navbar: React.FC<NavbarProps> = ({ children }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -20,6 +27,20 @@ const Navbar: React.FC<NavbarProps> = ({ children }) => {
   };
 
   const isActive = (path: string) => location.pathname === path;
+
+  // Get the display name for the avatar
+  const getAvatarText = (user: User | null): string => {
+    if (!user) return '';
+    if (user.username) return user.username.charAt(0).toUpperCase();
+    if (user.email) return user.email.charAt(0).toUpperCase();
+    return '?';
+  };
+
+  // Get the display name for the user
+  const getDisplayName = (user: User | null): string => {
+    if (!user) return '';
+    return user.username || user.email.split('@')[0] || 'User';
+  };
 
   return (
     <AppBar position="sticky" color="default" elevation={0} sx={{ backgroundColor: 'background.paper' }}>
@@ -81,19 +102,29 @@ const Navbar: React.FC<NavbarProps> = ({ children }) => {
             {user ? (
               <>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Avatar 
-                    sx={{ 
-                      width: 32, 
-                      height: 32, 
-                      bgcolor: 'primary.main',
-                      fontSize: '0.875rem',
-                      fontWeight: 500,
-                    }}
-                  >
-                    {user.username.charAt(0).toUpperCase()}
-                  </Avatar>
+                  {user.picture ? (
+                    <Avatar 
+                      src={user.picture}
+                      sx={{ 
+                        width: 32, 
+                        height: 32,
+                      }}
+                    />
+                  ) : (
+                    <Avatar 
+                      sx={{ 
+                        width: 32, 
+                        height: 32, 
+                        bgcolor: 'primary.main',
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                      }}
+                    >
+                      {getAvatarText(user)}
+                    </Avatar>
+                  )}
                   <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 500 }}>
-                    {user.username}
+                    {getDisplayName(user)}
                   </Typography>
                 </Box>
                 <Button

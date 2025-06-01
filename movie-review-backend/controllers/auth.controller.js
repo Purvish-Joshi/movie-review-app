@@ -118,25 +118,60 @@ exports.login = async (req, res) => {
 exports.googleAuth = async (req, res) => {
     try {
         const { token } = req.body;
+        
+        if (!token) {
+            console.error('No token provided in request body');
+            return res.status(400).json({
+                message: 'No token provided'
+            });
+        }
 
+        if (!process.env.GOOGLE_CLIENT_ID) {
+            console.error('GOOGLE_CLIENT_ID not configured in environment');
+            return res.status(500).json({
+                message: 'Server configuration error'
+            });
+        }
+
+        console.log('Attempting to verify token with Google...');
         // Verify Google token
         const ticket = await client.verifyIdToken({
             idToken: token,
             audience: process.env.GOOGLE_CLIENT_ID
+        }).catch(error => {
+            console.error('Google token verification error:', error);
+            throw new Error('Failed to verify Google token: ' + error.message);
         });
 
+        console.log('Token verified successfully');
         const googleData = ticket.getPayload();
+        
+        if (!googleData || !googleData.email) {
+            console.error('Invalid payload from Google token');
+            return res.status(400).json({
+                message: 'Invalid token payload'
+            });
+        }
 
         // Check if user exists
-        let user = await User.findOne({ email: googleData.email });
+        let user = await User.findOne({ email: googleData.email }).catch(error => {
+            console.error('Database query error:', error);
+            throw new Error('Database error: ' + error.message);
+        });
 
         if (user) {
             // If user exists but hasn't used Google before, update their Google ID
             if (!user.googleId) {
-                user.googleId = googleData.sub;
-                user.picture = googleData.picture;
-                user.authProvider = 'google';
-                await user.save();
+                try {
+                    user.googleId = googleData.sub;
+                    user.picture = googleData.picture;
+                    user.authProvider = 'google';
+                    await user.save();
+                    console.log('Updated existing user with Google data');
+                } catch (error) {
+                    console.error('Error updating user with Google data:', error);
+                    throw new Error('Failed to update user with Google data');
+                }
             }
 
             // Generate token
@@ -154,6 +189,7 @@ exports.googleAuth = async (req, res) => {
         }
 
         // If user doesn't exist, send Google data to frontend for registration
+        console.log('User not found, sending registration data');
         return res.status(404).json({
             message: 'User not found',
             googleData: {
@@ -165,9 +201,11 @@ exports.googleAuth = async (req, res) => {
         });
     } catch (error) {
         console.error('Google auth error:', error);
+        console.error('Stack trace:', error.stack);
         res.status(500).json({
             message: 'Error with Google authentication',
-            error: error.message
+            error: error.message,
+            details: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 }; 

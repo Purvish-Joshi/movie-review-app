@@ -13,13 +13,17 @@ const GoogleLogin: React.FC = () => {
   const handleSuccess = async (credentialResponse: any) => {
     try {
       if (!credentialResponse.credential) {
-        throw new Error('No credential received from Google');
+        console.error('No credential received from Google');
+        setError('Failed to receive credentials from Google. Please try again.');
+        return;
       }
 
+      console.log('Sending token to backend...');
       const response = await api.post('/auth/google', {
         token: credentialResponse.credential,
       });
 
+      console.log('Received response from backend');
       // If the user exists, log them in
       if (response.data.user) {
         login(response.data);
@@ -27,12 +31,16 @@ const GoogleLogin: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Error during Google login:', error);
+      console.error('Response data:', error.response?.data);
       
       // If the error is 404 (user not found), redirect to registration
       if (error.response?.status === 404) {
         try {
           // Get the decoded token data from the backend response
           const googleData = error.response.data.googleData;
+          if (!googleData || !googleData.email) {
+            throw new Error('Invalid registration data received');
+          }
           
           // Redirect to register page with the Google account data
           navigate('/register', {
@@ -42,19 +50,21 @@ const GoogleLogin: React.FC = () => {
             }
           });
         } catch (navError) {
+          console.error('Navigation error:', navError);
           setError('Error processing Google login data. Please try again.');
         }
       } else {
-        setError(
-          error.response?.data?.message || 
-          error.message || 
-          'Google login failed. Please try again.'
-        );
+        const errorMessage = error.response?.data?.message 
+          || error.response?.data?.error
+          || error.message 
+          || 'Google login failed. Please try again.';
+        setError(errorMessage);
       }
     }
   };
 
   const handleError = () => {
+    console.error('Google login error callback triggered');
     setError('Google Login Failed. Please try again.');
   };
 
@@ -83,7 +93,11 @@ const GoogleLogin: React.FC = () => {
         onClose={handleCloseError}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert onClose={handleCloseError} severity="error" sx={{ width: '100%' }}>
+        <Alert 
+          onClose={handleCloseError} 
+          severity="error" 
+          sx={{ width: '100%' }}
+        >
           {error}
         </Alert>
       </Snackbar>
