@@ -1,38 +1,81 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { GoogleLogin as GoogleOAuthLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
-import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import { Snackbar, Alert } from '@mui/material';
+import api from '../config/api';
 
 const GoogleLogin: React.FC = () => {
   const { login } = useAuth();
+  const navigate = useNavigate();
+  const [error, setError] = useState<string>('');
 
   const handleSuccess = async (credentialResponse: any) => {
     try {
-      // Send the token to your backend
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/auth/google`, {
+      const response = await api.post('/auth/google', {
         token: credentialResponse.credential,
       });
 
-      // Handle the response from your backend
-      const { data } = response;
-      login(data);
-    } catch (error) {
+      // If the user exists, log them in
+      if (response.data.user) {
+        login(response.data);
+        navigate('/');
+      }
+    } catch (error: any) {
       console.error('Error during Google login:', error);
+      
+      // If the error is 404 (user not found), redirect to registration
+      if (error.response?.status === 404) {
+        // Get the decoded token data from the backend response
+        const googleData = error.response.data.googleData;
+        
+        // Redirect to register page with the Google account data
+        navigate('/register', {
+          state: {
+            email: googleData.email,
+            googleData: googleData
+          }
+        });
+      } else {
+        setError(error.response?.data?.message || 'Google login failed. Please try again.');
+      }
     }
   };
 
   const handleError = () => {
-    console.error('Google Login Failed');
+    setError('Google Login Failed. Please try again.');
+  };
+
+  const handleCloseError = () => {
+    setError('');
   };
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', margin: '20px 0' }}>
-      <GoogleOAuthLogin
-        onSuccess={handleSuccess}
-        onError={handleError}
-        useOneTap
-      />
-    </div>
+    <>
+      <div style={{ display: 'flex', justifyContent: 'center', margin: '20px 0' }}>
+        <GoogleOAuthLogin
+          onSuccess={handleSuccess}
+          onError={handleError}
+          useOneTap
+          theme="filled_blue"
+          size="large"
+          shape="rectangular"
+          text="continue_with"
+          locale="en"
+        />
+      </div>
+      
+      <Snackbar 
+        open={!!error} 
+        autoHideDuration={6000} 
+        onClose={handleCloseError}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseError} severity="error" sx={{ width: '100%' }}>
+          {error}
+        </Alert>
+      </Snackbar>
+    </>
   );
 };
 

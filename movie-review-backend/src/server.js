@@ -6,6 +6,7 @@ require('dotenv').config({ path: path.join(__dirname, '../.env') });
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('../config/db');
+const authRoutes = require('../routes/auth.routes');
 const userRoutes = require('../routes/userRoutes');
 const movieRoutes = require('../routes/movieRoutes');
 const favoriteRoutes = require('../routes/favoriteRoutes');
@@ -43,6 +44,7 @@ app.use(cors(corsOptions));
 app.use(express.json());
 
 // Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/movies', movieRoutes);
 app.use('/api/favorites', favoriteRoutes);

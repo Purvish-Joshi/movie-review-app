@@ -19,6 +19,19 @@ const userSchema = new mongoose.Schema({
         required: [true, 'Password is required'],
         minlength: 6
     },
+    googleId: {
+        type: String,
+        sparse: true,
+        unique: true
+    },
+    picture: {
+        type: String
+    },
+    authProvider: {
+        type: String,
+        enum: ['local', 'google'],
+        default: 'local'
+    },
     createdAt: {
         type: Date,
         default: Date.now
@@ -27,7 +40,8 @@ const userSchema = new mongoose.Schema({
 
 // Hash password before saving
 userSchema.pre('save', async function(next) {
-    if (!this.isModified('password')) {
+    // Only hash the password if it's being modified and auth provider is local
+    if (!this.isModified('password') || this.authProvider !== 'local') {
         next();
     }
     const salt = await bcrypt.genSalt(10);
@@ -36,6 +50,9 @@ userSchema.pre('save', async function(next) {
 
 // Method to check password
 userSchema.methods.matchPassword = async function(enteredPassword) {
+    if (this.authProvider !== 'local') {
+        return false;
+    }
     return await bcrypt.compare(enteredPassword, this.password);
 };
 
