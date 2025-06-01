@@ -3,7 +3,7 @@ import { AppBar, Toolbar, Typography, Button, Box, Container, Avatar } from '@mu
 import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom';
 import MovieIcon from '@mui/icons-material/Movie';
 import FavoriteIcon from '@mui/icons-material/Favorite';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 interface NavbarProps {
   children?: ReactNode;

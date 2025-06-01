@@ -96,8 +96,8 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <AuthProvider>
-        <Router>
+      <Router>
+        <AuthProvider>
           <Box sx={{ 
             minHeight: '100vh',
             backgroundColor: 'background.default',
@@ -133,8 +133,8 @@ function App() {
               </Routes>
             </Container>
           </Box>
-        </Router>
-      </AuthProvider>
+        </AuthProvider>
+      </Router>
     </ThemeProvider>
   );
 }
