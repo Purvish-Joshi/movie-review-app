@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Typography, Alert, Box } from '@mui/material';
 import type { Theme } from '@mui/material/styles';
 import type { SxProps } from '@mui/system';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import api from '../config/api';
 import MovieCard from '../components/MovieCard';
 import { Movie } from '../types/movie';
