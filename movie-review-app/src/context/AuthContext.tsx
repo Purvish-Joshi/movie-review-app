@@ -19,8 +19,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const token = localStorage.getItem('auth_token');
     const savedUser = localStorage.getItem('user');
     if (token && savedUser) {
-      setIsAuthenticated(true);
-      setUser(JSON.parse(savedUser));
+      try {
+        const parsedUser = JSON.parse(savedUser);
+        setIsAuthenticated(true);
+        setUser(parsedUser);
+      } catch (error) {
+        console.error('Error parsing saved user:', error);
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user');
+      }
     }
   }, []);
 
@@ -38,18 +45,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('user');
   };
 
-  if (!process.env.REACT_APP_GOOGLE_CLIENT_ID) {
-    console.error('Missing REACT_APP_GOOGLE_CLIENT_ID environment variable');
-    return null;
+  const contextValue: AuthContextType = {
+    isAuthenticated,
+    user,
+    login,
+    logout,
+  };
+
+  // Wrap the children with AuthContext.Provider regardless of Google OAuth status
+  const wrappedChildren = (
+    <AuthContext.Provider value={contextValue}>
+      {children}
+    </AuthContext.Provider>
+  );
+
+  // If Google Client ID is available, wrap with GoogleOAuthProvider
+  if (process.env.REACT_APP_GOOGLE_CLIENT_ID) {
+    return (
+      <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
+        {wrappedChildren}
+      </GoogleOAuthProvider>
+    );
   }
 
-  return (
-    <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
-      <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
-        {children}
-      </AuthContext.Provider>
-    </GoogleOAuthProvider>
-  );
+  // If no Google Client ID, still provide auth context without Google OAuth
+  console.warn('Missing REACT_APP_GOOGLE_CLIENT_ID environment variable - Google Sign-In will not be available');
+  return wrappedChildren;
 };
 
 export const useAuth = () => {

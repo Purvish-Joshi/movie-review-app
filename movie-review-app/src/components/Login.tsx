@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -7,7 +7,8 @@ import {
   Button,
   Typography,
   Box,
-  Divider
+  Divider,
+  CircularProgress
 } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import GoogleLogin from './GoogleLogin';
@@ -15,14 +16,23 @@ import axios from 'axios';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    // Redirect if already authenticated
+    if (isAuthenticated) {
+      navigate('/');
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
     
     try {
       const response = await axios.post(`${process.env.REACT_APP_API_URL}/auth/login`, {
@@ -33,7 +43,13 @@ const Login: React.FC = () => {
       login(response.data);
       navigate('/');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'An error occurred during login');
+      console.error('Login error:', err);
+      setError(
+        err.response?.data?.message || 
+        'An error occurred during login. Please try again.'
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -53,6 +69,7 @@ const Login: React.FC = () => {
             onChange={(e) => setEmail(e.target.value)}
             margin="normal"
             required
+            disabled={isLoading}
           />
           <TextField
             fullWidth
@@ -62,6 +79,7 @@ const Login: React.FC = () => {
             onChange={(e) => setPassword(e.target.value)}
             margin="normal"
             required
+            disabled={isLoading}
           />
           {error && (
             <Typography color="error" variant="body2" sx={{ mt: 2 }}>
@@ -74,8 +92,9 @@ const Login: React.FC = () => {
             variant="contained"
             color="primary"
             sx={{ mt: 3 }}
+            disabled={isLoading}
           >
-            Login
+            {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Login'}
           </Button>
         </form>
 
