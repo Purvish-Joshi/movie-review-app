@@ -4,9 +4,12 @@ const bcrypt = require('bcryptjs');
 const userSchema = new mongoose.Schema({
     username: {
         type: String,
-        required: [true, 'Username is required'],
+        required: function() {
+            return this.authProvider === 'local';
+        },
         unique: true,
-        trim: true
+        trim: true,
+        sparse: true
     },
     email: {
         type: String,
@@ -16,7 +19,9 @@ const userSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: [true, 'Password is required'],
+        required: function() {
+            return this.authProvider === 'local';
+        },
         minlength: 6
     },
     googleId: {
@@ -43,6 +48,7 @@ userSchema.pre('save', async function(next) {
     // Only hash the password if it's being modified and auth provider is local
     if (!this.isModified('password') || this.authProvider !== 'local') {
         next();
+        return;
     }
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);

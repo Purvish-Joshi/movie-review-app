@@ -39,7 +39,9 @@ const Navbar: React.FC<NavbarProps> = ({ children }) => {
   // Get the display name for the user
   const getDisplayName = (user: User | null): string => {
     if (!user) return '';
-    return user.username || user.email.split('@')[0] || 'User';
+    if (user.username) return user.username;
+    if (user.email) return user.email.split('@')[0];
+    return 'User';
   };
 
   return (

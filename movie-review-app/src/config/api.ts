@@ -2,6 +2,10 @@ import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_API_URL;
 
+if (!API_URL) {
+    console.error('REACT_APP_API_URL is not defined in environment variables');
+}
+
 // Create axios instance
 const api = axios.create({
     baseURL: API_URL,
@@ -22,12 +26,15 @@ if (token) {
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('auth_token');
-        if (token && !config.headers.Authorization) {
+        if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
+        // Ensure CORS credentials are always included
+        config.withCredentials = true;
         return config;
     },
     (error) => {
+        console.error('Request interceptor error:', error);
         return Promise.reject(error);
     }
 );
@@ -36,6 +43,8 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
+        console.error('API Error:', error.response?.data || error.message);
+        
         if (error.response?.status === 401) {
             // Clear invalid session data
             localStorage.removeItem('auth_token');

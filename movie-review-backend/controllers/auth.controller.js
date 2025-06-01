@@ -154,7 +154,12 @@ exports.googleAuth = async (req, res) => {
         }
 
         // Check if user exists
-        let user = await User.findOne({ email: googleData.email }).catch(error => {
+        let user = await User.findOne({ 
+            $or: [
+                { email: googleData.email },
+                { googleId: googleData.sub }
+            ]
+        }).catch(error => {
             console.error('Database query error:', error);
             throw new Error('Database error: ' + error.message);
         });
@@ -181,24 +186,39 @@ exports.googleAuth = async (req, res) => {
                 token,
                 user: {
                     id: user._id,
-                    username: user.username,
+                    username: user.username || googleData.name,
                     email: user.email,
-                    picture: user.picture
+                    picture: user.picture || googleData.picture
                 }
             });
         }
 
-        // If user doesn't exist, send Google data to frontend for registration
-        console.log('User not found, sending registration data');
-        return res.status(404).json({
-            message: 'User not found',
-            googleData: {
+        // If user doesn't exist, create a new user
+        try {
+            const newUser = await User.create({
+                username: googleData.name,
                 email: googleData.email,
-                sub: googleData.sub,
+                googleId: googleData.sub,
                 picture: googleData.picture,
-                name: googleData.name
-            }
-        });
+                authProvider: 'google',
+                password: Math.random().toString(36).slice(-8) // Random password for Google users
+            });
+
+            const token = generateToken(newUser);
+
+            return res.json({
+                token,
+                user: {
+                    id: newUser._id,
+                    username: newUser.username,
+                    email: newUser.email,
+                    picture: newUser.picture
+                }
+            });
+        } catch (error) {
+            console.error('Error creating new user:', error);
+            throw new Error('Failed to create new user: ' + error.message);
+        }
     } catch (error) {
         console.error('Google auth error:', error);
         console.error('Stack trace:', error.stack);

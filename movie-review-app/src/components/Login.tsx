@@ -12,7 +12,7 @@ import {
 } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import GoogleLogin from './GoogleLogin';
-import axios from 'axios';
+import api from '../config/api';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -35,17 +35,23 @@ const Login: React.FC = () => {
     setIsLoading(true);
     
     try {
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/auth/login`, {
+      const response = await api.post('/auth/login', {
         email,
         password,
       });
       
+      // Validate response data
+      if (!response.data.token || !response.data.user || !response.data.user.email) {
+        throw new Error('Invalid response from server');
+      }
+
       login(response.data);
       navigate('/');
     } catch (err: any) {
       console.error('Login error:', err);
       setError(
         err.response?.data?.message || 
+        err.message ||
         'An error occurred during login. Please try again.'
       );
     } finally {
