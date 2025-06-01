@@ -32,9 +32,15 @@ const corsOptions = {
         'X-Requested-With',
         'Accept',
         'Origin',
-        'Cross-Origin-Opener-Policy'
+        'Cross-Origin-Opener-Policy',
+        'Cross-Origin-Resource-Policy'
     ],
-    exposedHeaders: ['Content-Type', 'Authorization', 'Cross-Origin-Opener-Policy'],
+    exposedHeaders: [
+        'Content-Type', 
+        'Authorization', 
+        'Cross-Origin-Opener-Policy',
+        'Cross-Origin-Resource-Policy'
+    ],
     preflightContinue: false,
     optionsSuccessStatus: 204
 };
@@ -42,14 +48,21 @@ const corsOptions = {
 // Apply CORS middleware before other middleware
 app.use(cors(corsOptions));
 
-// Add Cross-Origin-Opener-Policy header
+// Add security headers
 app.use((req, res, next) => {
     res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     next();
 });
 
 // Other middleware
 app.use(express.json());
+
+// Request logging middleware
+app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+    next();
+});
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -64,8 +77,23 @@ app.get('/', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({ message: 'Something went wrong!' });
+    console.error('Error occurred:', err);
+    console.error('Stack trace:', err.stack);
+    
+    // Log request details
+    console.error('Request details:', {
+        method: req.method,
+        path: req.path,
+        headers: req.headers,
+        body: req.body,
+        query: req.query
+    });
+
+    res.status(500).json({ 
+        message: 'Something went wrong!',
+        error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error',
+        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
 });
 
 const PORT = process.env.PORT || 8080;

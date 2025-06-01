@@ -1,16 +1,26 @@
 import React, { useState } from 'react';
-import { GoogleLogin as GoogleOAuthLogin } from '@react-oauth/google';
+import { GoogleLogin as GoogleOAuthLogin, CredentialResponse } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Snackbar, Alert } from '@mui/material';
 import api from '../config/api';
+
+interface GoogleResponse {
+  token: string;
+  user: {
+    id: string;
+    username?: string;
+    email: string;
+    picture?: string;
+  };
+}
 
 const GoogleLogin: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState<string>('');
 
-  const handleSuccess = async (credentialResponse: any) => {
+  const handleSuccess = async (credentialResponse: CredentialResponse) => {
     try {
       if (!credentialResponse.credential) {
         console.error('No credential received from Google');
@@ -18,41 +28,40 @@ const GoogleLogin: React.FC = () => {
         return;
       }
 
-      console.log('Sending token to backend...');
-      const response = await api.post('/auth/google', {
+      console.log('Received Google credential, sending to backend...');
+      
+      const response = await api.post<GoogleResponse>('/auth/google', {
         token: credentialResponse.credential,
       });
 
-      console.log('Received response from backend');
-      // If the user exists, log them in
-      if (response.data.user) {
-        login(response.data);
-        navigate('/');
+      console.log('Received response from backend:', response.data);
+
+      if (!response.data.user || !response.data.token) {
+        console.error('Invalid response from server:', response.data);
+        setError('Invalid response from server. Please try again.');
+        return;
       }
+
+      // Log successful response
+      console.log('Login successful, user data:', {
+        id: response.data.user.id,
+        email: response.data.user.email,
+        username: response.data.user.username,
+        hasToken: !!response.data.token
+      });
+
+      login(response.data);
+      navigate('/');
     } catch (error: any) {
       console.error('Error during Google login:', error);
-      console.error('Response data:', error.response?.data);
+      console.error('Error response:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
       
-      // If the error is 404 (user not found), redirect to registration
-      if (error.response?.status === 404) {
-        try {
-          // Get the decoded token data from the backend response
-          const googleData = error.response.data.googleData;
-          if (!googleData || !googleData.email) {
-            throw new Error('Invalid registration data received');
-          }
-          
-          // Redirect to register page with the Google account data
-          navigate('/register', {
-            state: {
-              email: googleData.email,
-              googleData: googleData
-            }
-          });
-        } catch (navError) {
-          console.error('Navigation error:', navError);
-          setError('Error processing Google login data. Please try again.');
-        }
+      if (error.response?.status === 500) {
+        setError('Server error. Please try again later.');
       } else {
         const errorMessage = error.response?.data?.message 
           || error.response?.data?.error
@@ -79,11 +88,11 @@ const GoogleLogin: React.FC = () => {
           onSuccess={handleSuccess}
           onError={handleError}
           useOneTap={false}
+          type="standard"
           theme="filled_blue"
           size="large"
           shape="rectangular"
-          text="continue_with"
-          locale="en"
+          width="300"
         />
       </div>
       
