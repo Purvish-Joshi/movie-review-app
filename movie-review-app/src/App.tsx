@@ -17,70 +17,14 @@ const getTheme = (mode: 'light' | 'dark') => createTheme({
   palette: {
     mode,
     primary: {
-      main: mode === 'light' ? '#2c3e50' : '#3498db',
-      light: mode === 'light' ? '#34495e' : '#5dade2',
-      dark: mode === 'light' ? '#1a252f' : '#2980b9',
+      main: '#1976d2',
     },
     secondary: {
-      main: mode === 'light' ? '#e74c3c' : '#e74c3c',
-      light: mode === 'light' ? '#ff6b6b' : '#ff7675',
-      dark: mode === 'light' ? '#c0392b' : '#d63031',
+      main: '#dc004e',
     },
     background: {
-      default: mode === 'light' ? '#f5f6fa' : '#1a1a2e',
-      paper: mode === 'light' ? '#ffffff' : '#2d3436',
-    },
-    text: {
-      primary: mode === 'light' ? '#2c3e50' : '#dfe6e9',
-      secondary: mode === 'light' ? '#7f8c8d' : '#b2bec3',
-    },
-  },
-  typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-    h4: {
-      fontWeight: 600,
-    },
-    h6: {
-      fontWeight: 500,
-    },
-  },
-  components: {
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          borderRadius: 12,
-          boxShadow: mode === 'light' 
-            ? '0 4px 6px rgba(0,0,0,0.1)'
-            : '0 4px 6px rgba(0,0,0,0.3)',
-        },
-      },
-    },
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: 8,
-          textTransform: 'none',
-          fontWeight: 500,
-        },
-      },
-    },
-    MuiAppBar: {
-      styleOverrides: {
-        root: {
-          boxShadow: mode === 'light'
-            ? '0 2px 4px rgba(0,0,0,0.1)'
-            : '0 2px 4px rgba(0,0,0,0.3)',
-        },
-      },
-    },
-    MuiChip: {
-      styleOverrides: {
-        root: {
-          backgroundColor: mode === 'light' 
-            ? 'rgba(44, 62, 80, 0.1)'
-            : 'rgba(52, 152, 219, 0.2)',
-        },
-      },
+      default: mode === 'light' ? '#f5f5f5' : '#303030',
+      paper: mode === 'light' ? '#fff' : '#424242',
     },
   },
 });
