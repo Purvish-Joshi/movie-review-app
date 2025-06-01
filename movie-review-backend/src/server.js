@@ -21,7 +21,8 @@ const app = express();
 const corsOptions = {
     origin: [
         'http://localhost:3000',
-        'https://movie-review-app-blush.vercel.app'
+        'https://movie-review-app-blush.vercel.app',
+        'https://movie-review-pq6pb2k8b-purvish-joshis-projects.vercel.app'
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],

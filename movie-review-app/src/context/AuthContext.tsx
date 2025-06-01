@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { GoogleOAuthProvider } from '@react-oauth/google';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -52,25 +51,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     logout,
   };
 
-  // Wrap the children with AuthContext.Provider regardless of Google OAuth status
-  const wrappedChildren = (
+  return (
     <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
-
-  // If Google Client ID is available, wrap with GoogleOAuthProvider
-  if (process.env.REACT_APP_GOOGLE_CLIENT_ID) {
-    return (
-      <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
-        {wrappedChildren}
-      </GoogleOAuthProvider>
-    );
-  }
-
-  // If no Google Client ID, still provide auth context without Google OAuth
-  console.warn('Missing REACT_APP_GOOGLE_CLIENT_ID environment variable - Google Sign-In will not be available');
-  return wrappedChildren;
 };
 
 export const useAuth = () => {
