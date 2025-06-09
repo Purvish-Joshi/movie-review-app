@@ -46,16 +46,26 @@ const Comments: React.FC<CommentsProps> = ({ movieId }) => {
     const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
     const [editText, setEditText] = useState('');
     const [editRating, setEditRating] = useState<number | null>(null);
+    const [loading, setLoading] = useState(false);
     const { user } = useAuth();
 
     const fetchComments = useCallback(async () => {
         try {
+            setLoading(true);
             const response = await api.get(`/comments/${movieId}`);
-            setComments(response.data);
+            
+            // Handle both array response and object with comments property
+            const commentsData = Array.isArray(response.data) 
+                ? response.data 
+                : response.data.comments || [];
+                
+            setComments(commentsData);
             setError('');
         } catch (err: any) {
-            setError('Failed to load comments');
             console.error('Error fetching comments:', err);
+            setError(err.response?.data?.message || 'Failed to load comments');
+        } finally {
+            setLoading(false);
         }
     }, [movieId]);
 
@@ -78,8 +88,8 @@ const Comments: React.FC<CommentsProps> = ({ movieId }) => {
             await fetchComments();
             setError('');
         } catch (err: any) {
-            setError(err.response?.data?.message || 'Failed to add comment. Please try logging in again.');
             console.error('Error adding comment:', err);
+            setError(err.response?.data?.message || 'Failed to add comment. Please try logging in again.');
         }
     };
 
@@ -90,8 +100,8 @@ const Comments: React.FC<CommentsProps> = ({ movieId }) => {
             await fetchComments();
             setError('');
         } catch (err: any) {
-            setError(err.response?.data?.message || 'Failed to delete comment');
             console.error('Error deleting comment:', err);
+            setError(err.response?.data?.message || 'Failed to delete comment');
         }
     };
 
@@ -122,8 +132,8 @@ const Comments: React.FC<CommentsProps> = ({ movieId }) => {
             await fetchComments();
             setError('');
         } catch (err: any) {
-            setError(err.response?.data?.message || 'Failed to update comment');
             console.error('Error updating comment:', err);
+            setError(err.response?.data?.message || 'Failed to update comment');
         }
     };
 
@@ -196,95 +206,105 @@ const Comments: React.FC<CommentsProps> = ({ movieId }) => {
                 </Alert>
             )}
 
-            <List>
-                {comments.map((comment, index) => (
-                    <React.Fragment key={comment._id}>
-                        <ListItem
-                            alignItems="flex-start"
-                            sx={{
-                                flexDirection: 'column',
-                                alignItems: 'flex-start',
-                                gap: 1
-                            }}
-                        >
-                            <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                <Box>
-                                    <Typography variant="subtitle2" color="primary">
-                                        {comment.user.username}
-                                    </Typography>
-                                    <Typography variant="caption" color="text.secondary">
-                                        {formatDate(comment.createdAt)}
-                                    </Typography>
-                                </Box>
-                                {user && user.id === comment.user._id && (
-                                    <Stack direction="row" spacing={1}>
-                                        {editingCommentId === comment._id ? (
-                                            <>
-                                                <IconButton
-                                                    onClick={() => handleUpdate(comment._id)}
-                                                    sx={{ color: 'success.main' }}
-                                                >
-                                                    <SaveIcon />
-                                                </IconButton>
-                                                <IconButton
-                                                    onClick={handleCancelEdit}
-                                                    sx={{ color: 'warning.main' }}
-                                                >
-                                                    <CancelIcon />
-                                                </IconButton>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <IconButton
-                                                    onClick={() => handleEdit(comment)}
-                                                    sx={{ color: 'primary.main' }}
-                                                >
-                                                    <EditIcon />
-                                                </IconButton>
-                                                <IconButton
-                                                    onClick={() => handleDelete(comment._id)}
-                                                    sx={{ color: 'error.main' }}
-                                                >
-                                                    <DeleteIcon />
-                                                </IconButton>
-                                            </>
+            {loading ? (
+                <Typography>Loading comments...</Typography>
+            ) : (
+                <List>
+                    {comments.length === 0 ? (
+                        <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+                            No comments yet. Be the first to review this movie!
+                        </Typography>
+                    ) : (
+                        comments.map((comment, index) => (
+                            <React.Fragment key={comment._id}>
+                                <ListItem
+                                    alignItems="flex-start"
+                                    sx={{
+                                        flexDirection: 'column',
+                                        alignItems: 'flex-start',
+                                        gap: 1
+                                    }}
+                                >
+                                    <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                        <Box>
+                                            <Typography variant="subtitle2" color="primary">
+                                                {comment.user.username}
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                                {formatDate(comment.createdAt)}
+                                            </Typography>
+                                        </Box>
+                                        {user && user.id === comment.user._id && (
+                                            <Stack direction="row" spacing={1}>
+                                                {editingCommentId === comment._id ? (
+                                                    <>
+                                                        <IconButton
+                                                            onClick={() => handleUpdate(comment._id)}
+                                                            sx={{ color: 'success.main' }}
+                                                        >
+                                                            <SaveIcon />
+                                                        </IconButton>
+                                                        <IconButton
+                                                            onClick={handleCancelEdit}
+                                                            sx={{ color: 'warning.main' }}
+                                                        >
+                                                            <CancelIcon />
+                                                        </IconButton>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <IconButton
+                                                            onClick={() => handleEdit(comment)}
+                                                            sx={{ color: 'primary.main' }}
+                                                        >
+                                                            <EditIcon />
+                                                        </IconButton>
+                                                        <IconButton
+                                                            onClick={() => handleDelete(comment._id)}
+                                                            sx={{ color: 'error.main' }}
+                                                        >
+                                                            <DeleteIcon />
+                                                        </IconButton>
+                                                    </>
+                                                )}
+                                            </Stack>
                                         )}
-                                    </Stack>
-                                )}
-                            </Box>
-
-                            <Box sx={{ width: '100%' }}>
-                                <Rating value={comment.rating} readOnly precision={0.5} />
-                                {editingCommentId === comment._id ? (
-                                    <Box sx={{ mt: 1 }}>
-                                        <Rating
-                                            value={editRating}
-                                            onChange={(_, value) => setEditRating(value)}
-                                            precision={0.5}
-                                        />
-                                        <TextField
-                                            fullWidth
-                                            multiline
-                                            rows={3}
-                                            variant="outlined"
-                                            value={editText}
-                                            onChange={(e) => setEditText(e.target.value)}
-                                            sx={{ mt: 1 }}
-                                        />
                                     </Box>
-                                ) : (
-                                    <Typography variant="body1" sx={{ mt: 1 }}>
-                                        {comment.content}
-                                    </Typography>
-                                )}
-                            </Box>
-                        </ListItem>
-                        {index < comments.length - 1 && <Divider component="li" />}
-                    </React.Fragment>
-                ))}
-            </List>
+
+                                    <Box sx={{ width: '100%' }}>
+                                        <Rating value={comment.rating} readOnly precision={0.5} />
+                                        {editingCommentId === comment._id ? (
+                                            <Box sx={{ mt: 1 }}>
+                                                <Rating
+                                                    value={editRating}
+                                                    onChange={(_, value) => setEditRating(value)}
+                                                    precision={0.5}
+                                                />
+                                                <TextField
+                                                    fullWidth
+                                                    multiline
+                                                    rows={3}
+                                                    variant="outlined"
+                                                    value={editText}
+                                                    onChange={(e) => setEditText(e.target.value)}
+                                                    sx={{ mt: 1 }}
+                                                />
+                                            </Box>
+                                        ) : (
+                                            <Typography variant="body1" sx={{ mt: 1 }}>
+                                                {comment.content}
+                                            </Typography>
+                                        )}
+                                    </Box>
+                                </ListItem>
+                                {index < comments.length - 1 && <Divider component="li" />}
+                            </React.Fragment>
+                        ))
+                    )}
+                </List>
+            )}
         </Box>
     );
 };
 
-export default Comments; 
+export default Comments;

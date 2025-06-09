@@ -7,7 +7,7 @@ if (!process.env.TMDB_API_KEY || !process.env.TMDB_BASE_URL) {
 }
 
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
-const TMDB_BASE_URL = process.env.TMDB_BASE_URL || 'https://api.themoviedb.org/3';
+const TMDB_BASE_URL = process.env.TMDB_BASE_URL;
 
 // Helper function to validate movieId
 const validateMovieId = async (movieId) => {
@@ -35,7 +35,7 @@ const validateRating = (rating) => {
     return numRating;
 };
 
-// Get comments for a movie
+// Get comments for a movie - NO AUTH REQUIRED
 exports.getComments = async (req, res) => {
     try {
         const { movieId } = req.params;
@@ -51,13 +51,13 @@ exports.getComments = async (req, res) => {
             .populate('user', 'username email')
             .sort('-createdAt');
 
-        res.json({
-            count: comments.length,
-            comments: comments.map(comment => ({
-                ...comment.toObject(),
-                isOwner: comment.user._id.toString() === req.user.id
-            }))
-        });
+        // Map comments and check ownership only if user is authenticated
+        const mappedComments = comments.map(comment => ({
+            ...comment.toObject(),
+            isOwner: req.user ? comment.user._id.toString() === req.user.id : false
+        }));
+
+        res.json(mappedComments);
     } catch (error) {
         console.error('Error fetching comments:', error);
         res.status(500).json({ 
@@ -67,9 +67,14 @@ exports.getComments = async (req, res) => {
     }
 };
 
-// Add a comment
+// Add a comment - AUTH REQUIRED
 exports.addComment = async (req, res) => {
     try {
+        // Check if user is authenticated
+        if (!req.user || !req.user.id) {
+            return res.status(401).json({ message: 'Authentication required' });
+        }
+
         const { movieId } = req.params;
         const { content, rating } = req.body;
 
@@ -78,8 +83,9 @@ exports.addComment = async (req, res) => {
         }
 
         // Validate rating
+        let validatedRating;
         try {
-            const validatedRating = validateRating(rating);
+            validatedRating = validateRating(rating);
         } catch (error) {
             return res.status(400).json({ message: error.message });
         }
@@ -108,7 +114,7 @@ exports.addComment = async (req, res) => {
             user: req.user.id,
             movie: movieId,
             content: content.trim(),
-            rating
+            rating: validatedRating
         });
 
         const savedComment = await comment.save();
@@ -130,9 +136,14 @@ exports.addComment = async (req, res) => {
     }
 };
 
-// Update a comment
+// Update a comment - AUTH REQUIRED
 exports.updateComment = async (req, res) => {
     try {
+        // Check if user is authenticated
+        if (!req.user || !req.user.id) {
+            return res.status(401).json({ message: 'Authentication required' });
+        }
+
         const { commentId } = req.params;
         const { content, rating } = req.body;
 
@@ -184,9 +195,14 @@ exports.updateComment = async (req, res) => {
     }
 };
 
-// Delete a comment
+// Delete a comment - AUTH REQUIRED
 exports.deleteComment = async (req, res) => {
     try {
+        // Check if user is authenticated
+        if (!req.user || !req.user.id) {
+            return res.status(401).json({ message: 'Authentication required' });
+        }
+
         const { commentId } = req.params;
 
         const comment = await Comment.findById(commentId);
@@ -212,4 +228,4 @@ exports.deleteComment = async (req, res) => {
             error: error.message 
         });
     }
-}; 
+};
