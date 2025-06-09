@@ -9,6 +9,9 @@ if (!process.env.REACT_APP_GOOGLE_CLIENT_ID) {
   console.error('REACT_APP_GOOGLE_CLIENT_ID is not configured in environment');
 }
 
+// Add this to your main.tsx temporarily
+console.log('Frontend REACT_APP_GOOGLE_CLIENT_ID:', process.env.REACT_APP_GOOGLE_CLIENT_ID);
+
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
