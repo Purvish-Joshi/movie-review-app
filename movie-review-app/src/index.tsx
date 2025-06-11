@@ -1,19 +1,16 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
-import { GoogleOAuthProvider } from '@react-oauth/google';
+import React from "react";
+import ReactDOM from "react-dom/client";
+import "./index.css";
+import App from "./App";
+import reportWebVitals from "./reportWebVitals";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 if (!process.env.REACT_APP_GOOGLE_CLIENT_ID) {
-  console.error('REACT_APP_GOOGLE_CLIENT_ID is not configured in environment');
+  console.error("REACT_APP_GOOGLE_CLIENT_ID is not configured in environment");
 }
 
-// Add this to your main.tsx temporarily
-console.log('Frontend REACT_APP_GOOGLE_CLIENT_ID:', process.env.REACT_APP_GOOGLE_CLIENT_ID);
-
 const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
+  document.getElementById("root") as HTMLElement
 );
 
 root.render(
