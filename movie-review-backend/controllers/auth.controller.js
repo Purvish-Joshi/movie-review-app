@@ -120,15 +120,13 @@ exports.login = async (req, res) => {
     }
 };
 
-// @desc    Google OAuth - Simplified Debug Version
+// @desc    Google OAuth
 // @route   POST /api/auth/google
 // @access  Public
 exports.googleAuth = async (req, res) => {
     try {
         const { token: googleToken } = req.body;
-        
-        console.log('Google auth attempt started');
-        
+
         if (!googleToken) {
             return res.status(400).json({
                 message: 'No token provided'
@@ -142,18 +140,6 @@ exports.googleAuth = async (req, res) => {
             });
         }
 
-        // Debug token info
-        try {
-            const decoded = jwt.decode(googleToken);
-            console.log('=== DEBUG TOKEN INFO ===');
-            console.log('Token audience:', decoded?.aud);
-            console.log('Backend Client ID:', process.env.GOOGLE_CLIENT_ID);
-            console.log('Match?', decoded?.aud === process.env.GOOGLE_CLIENT_ID);
-            console.log('========================');
-        } catch (e) {
-            console.log('Could not decode token for debugging');
-        }
-
         // Verify Google token
         const ticket = await client.verifyIdToken({
             idToken: googleToken,
@@ -161,17 +147,15 @@ exports.googleAuth = async (req, res) => {
         });
 
         const googleData = ticket.getPayload();
-        
+
         if (!googleData || !googleData.email) {
             return res.status(400).json({
                 message: 'Invalid token payload'
             });
         }
 
-        console.log('Google verification successful for:', googleData.email);
-
         // Check if user exists
-        let user = await User.findOne({ 
+        let user = await User.findOne({
             $or: [
                 { email: googleData.email.toLowerCase() },
                 { googleId: googleData.sub }
@@ -212,7 +196,7 @@ exports.googleAuth = async (req, res) => {
             token: authToken,
             user: user.getPublicProfile()
         });
-        
+
     } catch (error) {
         console.error('Google auth error:', error);
         res.status(500).json({
